@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,16 +52,17 @@ public class NewsController {
 
     @Operation(summary = "Update", description = "Update a news.")
     @PutMapping(value = "/{id}")
-    public NewsDTO update(@PathVariable @Positive @NotNull Long id,
-                            @RequestBody @Valid NewsRequestDTO newsRequestDTO) {
-        return newsService.update(id, newsRequestDTO);
+    public ResponseEntity<NewsDTO> update(@PathVariable @Positive @NotNull Long id,
+                                          @RequestBody @Valid NewsRequestDTO newsRequestDTO) {
+        return new ResponseEntity<>(newsService.update(id, newsRequestDTO), HttpStatus.NO_CONTENT);
     }
 
     @Operation(summary = "Delete", description = "Delete a news.")
     @DeleteMapping("/{id}")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable @Positive @NotNull Long id) {
+    public ResponseEntity<Void> delete(@PathVariable @Positive @NotNull Long id) {
         newsService.delete(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 }

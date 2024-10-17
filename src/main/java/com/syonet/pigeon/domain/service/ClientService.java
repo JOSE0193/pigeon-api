@@ -1,7 +1,6 @@
 package com.syonet.pigeon.domain.service;
 
 import com.syonet.pigeon.api.dto.client.ClientDTO;
-import com.syonet.pigeon.api.dto.client.ClientPageDTO;
 import com.syonet.pigeon.api.dto.client.ClientRequestDTO;
 import com.syonet.pigeon.domain.exception.BusinessException;
 import com.syonet.pigeon.domain.exception.RecordNotFoundException;
@@ -12,8 +11,6 @@ import com.syonet.pigeon.util.DateUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -34,18 +31,12 @@ public class ClientService {
                 .toList();
     }
 
-    public ClientPageDTO findAllPageable(@PositiveOrZero int page, @Positive @Max(1000) int pageSize){
-        Page<Client> clientPage = clientRepository.findAll(PageRequest.of(page, pageSize));
-        List<ClientDTO> clients = clientPage.getContent().stream().map(clientMapper::toDTO).toList();
-        return new ClientPageDTO(clients, clientPage.getTotalElements(), clientPage.getTotalPages());
-    }
-
     public ClientDTO findById(@Positive @NotNull Long id) {
         return clientRepository.findById(id).map(clientMapper::toDTO)
                 .orElseThrow(() -> new RecordNotFoundException(id));
     }
 
-    public ClientDTO create(@Valid ClientRequestDTO clientRequestDTO) {
+    public ClientDTO save(@Valid ClientRequestDTO clientRequestDTO) {
         clientRepository.findByEmail(clientRequestDTO.email()).stream()
                 .findAny().ifPresent(c -> {
                     throw new BusinessException("A client with email " + clientRequestDTO.email() + " already exists.");

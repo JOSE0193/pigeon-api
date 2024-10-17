@@ -24,7 +24,6 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final ClientRepository clientRepository;
     private final NewsRepository newsRepository;
-    private final NewsMapper newsMapper;
 
     @Scheduled(cron = "0 0 8 * * ?")
     public void sendDailyEmail(){
@@ -80,7 +79,7 @@ public class EmailService {
         return sbHeader.append(novaLinha).append(sbNews).toString();
     }
 
-    private void updateStatus(News news) {
+    public void updateStatus(News news) {
         newsRepository.findById(news.getId()).map(actual -> {
                     actual.setTitle(news.getTitle());
                     actual.setDescription(news.getDescription());
