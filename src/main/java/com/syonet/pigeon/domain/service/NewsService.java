@@ -67,17 +67,6 @@ public class NewsService {
                 .orElseThrow(() -> new RecordNotFoundException(id));
     }
 
-    public void updateStatus(@NotNull News news) {
-        newsRepository.findById(news.getId()).map(actual -> {
-                    actual.setTitle(news.getTitle());
-                    actual.setDescription(news.getDescription());
-                    actual.setLink(news.getLink());
-                    actual.setStatusNews(StatusNews.PROCESSED);
-                    return newsRepository.save(actual);
-                })
-                .orElseThrow(() -> new RecordNotFoundException(news.getId()));
-    }
-
     public void delete(@Positive @NotNull Long id) {
         newsRepository.delete(newsRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id)));

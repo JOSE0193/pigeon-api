@@ -15,8 +15,8 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 public enum StatusNews {
 
-    PROCESSED("processada"),
-    NO_PROCESSED("nao_processada");
+    PROCESSED("processed"),
+    NO_PROCESSED("no_processed");
 
     String value;
 

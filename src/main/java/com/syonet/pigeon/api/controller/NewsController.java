@@ -2,7 +2,9 @@ package com.syonet.pigeon.api.controller;
 
 import com.syonet.pigeon.api.dto.news.NewsDTO;
 import com.syonet.pigeon.api.dto.news.NewsRequestDTO;
+import com.syonet.pigeon.domain.service.EmailService;
 import com.syonet.pigeon.domain.service.NewsService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -16,38 +18,45 @@ import java.util.List;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/noticias")
+@RequestMapping("api/news")
 public class NewsController {
 
     private final NewsService newsService;
+    private final EmailService emailService;
 
-    @GetMapping
-    public List<NewsDTO> listAll() {
-        return newsService.listAll();
-    }
-
+    @Operation(summary = "List of unprocessed news", description = "Return unprocessed news.")
     @GetMapping("/findAllNotProcessed")
     public List<NewsDTO> findAllNotProcessed() {
         return newsService.findByNewsNotProcessed();
     }
 
+    @Operation(summary = "Find", description = "Returning a news.")
     @GetMapping("/{id}")
     public NewsDTO findById(@PathVariable @Positive @NotNull Long id) {
         return newsService.findById(id);
     }
 
+    @Operation(summary = "Save", description = "Save a news.")
     @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)
     public NewsDTO create(@RequestBody @Valid NewsRequestDTO newsRequestDTO) {
         return newsService.save(newsRequestDTO);
     }
 
+    @Operation(summary = "Send Email", description = "Send daily unprocessed news")
+    @PostMapping("/sendEmailDailyNews")
+    public void setNewsService(){
+        emailService.sendDailyEmail();
+    }
+
+    @Operation(summary = "Update", description = "Update a news.")
     @PutMapping(value = "/{id}")
     public NewsDTO update(@PathVariable @Positive @NotNull Long id,
                             @RequestBody @Valid NewsRequestDTO newsRequestDTO) {
         return newsService.update(id, newsRequestDTO);
     }
 
+    @Operation(summary = "Delete", description = "Delete a news.")
     @DeleteMapping("/{id}")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     public void delete(@PathVariable @Positive @NotNull Long id) {

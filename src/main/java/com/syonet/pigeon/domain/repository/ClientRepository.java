@@ -11,8 +11,4 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByEmail(String email);
 
-    List<Client> findByDateBirth(LocalDate date);
-
-    List<Client> findByDateBirthNot(LocalDate date);
-
 }

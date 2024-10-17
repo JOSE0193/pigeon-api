@@ -32,4 +32,17 @@ public class ClientMapper {
         return client;
     }
 
+    public Client toEntity(ClientDTO dto){
+        if(dto == null) {
+            return null;
+        }
+        LocalDate dateOfBirth = DateUtil.parseDateFormaterBr(dto.dateBirth());
+        Client client = Client.builder()
+                .name(dto.name())
+                .email(dto.email())
+                .dateBirth(dateOfBirth)
+                .build();
+        return client;
+    }
+
 }

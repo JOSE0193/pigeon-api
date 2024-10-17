@@ -1,6 +1,7 @@
 package com.syonet.pigeon.domain.service;
 
 import com.syonet.pigeon.api.dto.news.NewsDTO;
+import com.syonet.pigeon.domain.exception.RecordNotFoundException;
 import com.syonet.pigeon.domain.mapper.NewsMapper;
 import com.syonet.pigeon.domain.model.Client;
 import com.syonet.pigeon.domain.model.News;
@@ -21,35 +22,42 @@ import java.util.List;
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final NewsRepository newsRepository;
     private final ClientRepository clientRepository;
-    private final NewsService newsService;
+    private final NewsRepository newsRepository;
     private final NewsMapper newsMapper;
 
-    @Scheduled(cron = "0 38 18 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     public void sendDailyEmail(){
+        var listNews = newsRepository.findByStatusNews(StatusNews.NO_PROCESSED);
         List<Client> clients = clientRepository.findAll();
+        LocalDate today = LocalDate.now();
+        int day = today.getDayOfMonth();
+        int month = today.getMonthValue();
 
-        clients.forEach(client -> {
-            if(client.getDateBirth() == LocalDate.now()){
-                sendEmail(client, true);
+        if(!listNews.isEmpty()){
+            clients.forEach(client -> {
+                if(client.getDateBirth().getDayOfMonth() == day && client.getDateBirth().getMonthValue() == month){
+                    sendEmail(client, listNews,  true);
+                } else{
+                    sendEmail(client, listNews, false);
+                }
+            });
+            for (News news: listNews) {
+                this.updateStatus(news);
             }
-            sendEmail(client, false);
-        });
-
+        }
     }
 
-    private void sendEmail(Client client, boolean isBirthday){
+    private void sendEmail(Client client, List<News> news, boolean isBirthday){
         var messageEmail = new SimpleMailMessage();
         messageEmail.setFrom("jose01.11.93@gmail.com");
         messageEmail.setTo(client.getEmail());
         messageEmail.setSubject("Notícias do dia!");
-        messageEmail.setText(bodyMessage(client, isBirthday));
+        messageEmail.setText(bodyMessage(client, news, isBirthday));
         mailSender.send(messageEmail);
     }
 
-    private String bodyMessage(Client client, boolean isBirthday) {
-        var listNews = newsService.findByNewsNotProcessed();
+    private String bodyMessage(Client client, List<News> newsList, boolean isBirthday) {
         String nameClient = client.getName();
         String messageBirthday = "*****    Feliz Aniversário!   *****";
         StringBuilder sbHeader = new StringBuilder();
@@ -57,32 +65,30 @@ public class EmailService {
         String novaLinha = System.lineSeparator();
 
         if(isBirthday){
-            sbHeader.append("Bom dia ").append(nameClient).append(novaLinha)
+            sbHeader.append("Bom dia ").append(nameClient).append(novaLinha).append(novaLinha)
                     .append(messageBirthday).append(novaLinha).append(novaLinha);
         } else {
             sbHeader.append("Bom dia ").append(nameClient).append(novaLinha).append(novaLinha);
         }
-
         sbNews.append("Lista de Notícias: ").append(novaLinha).append(novaLinha);
-        for (NewsDTO news: listNews) {
-            sbNews.append(news.title()).append(novaLinha)
-                    .append(news.description()).append(novaLinha).append(novaLinha)
-                    .append(news.link()).append(novaLinha).append(novaLinha);
-            newsService.updateStatus(newsMapper.toEntity(news));
+        for (News news: newsList) {
+            sbNews.append(news.getTitle()).append(novaLinha).append(novaLinha)
+                    .append(news.getDescription()).append(novaLinha).append(novaLinha)
+                    .append(news.getLink()).append(novaLinha)
+                    .append("----------------------------------------------------").append(novaLinha).append(novaLinha);
         }
         return sbHeader.append(novaLinha).append(sbNews).toString();
     }
 
-    private List<Client> clientsBirthday(List<Client> clients) {
-        LocalDate dataAtual = LocalDate.now();
-        List<Client> clientsBirthday = clientRepository.findByDateBirth(dataAtual);
-        return clientsBirthday;
-    }
-
-    private List<Client> clientsNoBirthday(List<Client> clients){
-        LocalDate dataAtual = LocalDate.now();
-        List<Client> clientsBirthday = clientRepository.findByDateBirthNot(dataAtual);
-        return clientsBirthday;
+    private void updateStatus(News news) {
+        newsRepository.findById(news.getId()).map(actual -> {
+                    actual.setTitle(news.getTitle());
+                    actual.setDescription(news.getDescription());
+                    actual.setLink(news.getLink());
+                    actual.setStatusNews(StatusNews.PROCESSED);
+                    return newsRepository.save(actual);
+                })
+                .orElseThrow(() -> new RecordNotFoundException(news.getId()));
     }
 
 }

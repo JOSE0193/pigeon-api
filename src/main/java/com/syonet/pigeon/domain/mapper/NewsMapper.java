@@ -34,6 +34,7 @@ public class NewsMapper {
             return null;
         }
         News news = News.builder()
+                .id(dto.id())
                 .title(dto.title())
                 .description(dto.description())
                 .link(dto.link())

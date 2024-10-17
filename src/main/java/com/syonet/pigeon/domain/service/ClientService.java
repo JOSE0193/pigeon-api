@@ -50,12 +50,16 @@ public class ClientService {
                 .findAny().ifPresent(c -> {
                     throw new BusinessException("A client with email " + clientRequestDTO.email() + " already exists.");
                 });
-        Client course = clientMapper.toEntity(clientRequestDTO);
-        return clientMapper.toDTO(clientRepository.save(course));
+        Client client = clientMapper.toEntity(clientRequestDTO);
+        return clientMapper.toDTO(clientRepository.save(client));
     }
 
     public ClientDTO update(@Positive @NotNull Long id, @Valid ClientRequestDTO clientRequestDTO) {
         LocalDate dateBirth = DateUtil.parseDateFormaterBr(clientRequestDTO.dateBirth());
+        clientRepository.findByEmail(clientRequestDTO.email()).stream()
+                .findAny().ifPresent(c -> {
+                    throw new BusinessException("A client with email " + clientRequestDTO.email() + " already exists.");
+                });
         return clientRepository.findById(id).map(actual -> {
                     actual.setName(clientRequestDTO.name());
                     actual.setEmail(clientRequestDTO.email());
